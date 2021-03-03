@@ -1,5 +1,6 @@
 module output
   use utils, only : newunit
+  use simulation
   use Hamiltonian
 
 contains

@@ -1,17 +1,13 @@
-#define SPECTRAL 1
+#include "macros.h"
 module Hamiltonian
   use constants, only : dl, twopi
   use fftw3  ! For Laplacian, etc
+  use Model  ! Contains potential, etc.
   use simulation
   implicit none
 
-  real(dl), parameter :: lam = 1.2_dl
-  
-  ! Add macros for finite-differencing stencils
-  ! Add options to pad grid
-    
-  integer, parameter :: n_Hamiltonian_terms = 2  ! This is a bit ugly
-  
+  integer, parameter :: n_Hamiltonian_terms = 2  
+ 
 contains
   
   subroutine Hamiltonian_Split(this,dt,term)
@@ -55,40 +51,30 @@ contains
   subroutine Hamiltonian_potential(this,dt)
     type(Lattice), intent(inout) :: this
     real(dl), intent(in) :: dt
-    integer :: i
 
+    integer :: i, n
+    real(dl), dimension(1:this%nlat,1:this%nfld) :: LAP, DV
+    
+    n = this%nlat
 !    do i=1,this%nFld
 !       this%tPair%realSpace(:,:) = this%fld(:,:,i)
 !       call laplacian_2d(this%nLat,this%nLat,this%tPair%realSpace,this%tPair%specSpace,this%dk)
 !       this%dfld(:,:,i) = this%dfld(:,:,i) + dt*this%tPair%realSpace(:,:)
     !    enddo
 
-    this%tPair%realSpace(:,:) = this%fld(:,:,1)
+#ifdef SPECTRAL
+    this%tPair%realSpace(1:n,1:n) = this%fld(1:n,1:n,1)
     call laplacian_2d_wtype(this%tPair,this%dk)
-
-    this%dfld(:,:,1) = this%dfld(:,:,1) + dt*this%tPair%realSpace(:,:)
-    this%dfld = this%dfld - dt*vp(this%fld)
+    this%dfld(1:n,1:n,1) = this%dfld(1:n,1:n,1) + dt*this%tPair%realSpace(1:n,1:n)
+    this%dfld(1:n,1:n,:) = this%dfld(1:n,1:n,:) - dt*vp(this%fld(1:n,1:n,:))
+#else
+    call wrap_field(this)
+    do i=1,n
+       LAP = STENCIL(c,LAPLACIAN)
+       this%dfld(:,1:n,:) = this%dfld(1:n,1:n,1) !- dt*STENCIL(c,LAPLACIAN)
+       this%dfld(:,1:n,:) = this%dfld(1:n,1:n,1) - dt*vp(this%fld(1:n,1:n,1))
+    enddo
+#endif
   end subroutine Hamiltonian_potential
-
-  elemental function v(phi)
-    real(dl), intent(in) :: phi
-    real(dl) :: v
-    !    v = 0.5_dl*phi**2
-    v = cos(phi) + 0.5_dl*lam**2*sin(phi)**2 - 1._dl
-  end function v
-
-  elemental function vp(phi)
-    real(dl), intent(in) :: phi
-    real(dl) :: vp
-    ! vp = phi
-    vp = -sin(phi) + 0.5_dl*lam**2*sin(2._dl*phi)
-  end function vp
-
-  elemental function vpp(phi)
-    real(dl), intent(in) :: phi
-    real(dl) :: vpp
-    ! vpp = 1._dl
-    vpp = -cos(phi) + lam**2*cos(2._dl*phi)
-  end function vpp
   
 end module Hamiltonian

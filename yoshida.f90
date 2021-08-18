@@ -18,7 +18,7 @@ contains
     real(dl), intent(in) :: dt
     integer, intent(in) :: nstep
 
-    call symp2(this,dt,nstep)
+    call symp4(this,dt,nstep)
     this%time = this%time + dt*nstep
   end subroutine step_lattice
   
@@ -42,7 +42,7 @@ contains
     integer, intent(in) :: nsteps
 
     real(dl), parameter :: w1 = 1._dl/(2._dl-2._dl**(1._dl/3._dl))
-    real(dl), parameter :: w0 = 1._dl - 2._dl*w1
+    real(dl), parameter :: w0 = 1._dl - 2._dl*w1 
     integer :: i
     
     call Hamiltonian_Split(this,0.5_dl*w1*dt,1)

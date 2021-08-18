@@ -64,7 +64,7 @@ ifeq ($(BLAS),T)
 	MACROS+= -DUSEBLAS=1
 endif
 
-OBJS = constants.o utils.o fftw_mod_wtype.o lattice.o initialise.o hamiltonian.o yoshida.o output.o
+OBJS = constants.o utils.o fftw_mod_wtype.o lattice.o initialise.o model.o hamiltonian.o yoshida.o output.o
 OBJS_FFT = constants.o utils.o fftw_mod_wtype.o
 #OBJS = constants.o utils.o fftw_mod_wtype.o random_field.o fluctuations.o eom-scalar.o integrator.o bubble-extraction.o
 
